@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { cacheHitRatio, costByDay, groupBy, since, totals } from "../src/aggregate.js";
-import { bar, sparkline } from "../src/format.js";
+import { bar, sparkRows } from "../src/format.js";
 import type { UsageRecord } from "../src/scan.js";
 
 const NOW = new Date(2026, 10, 2, 15, 0).getTime();
@@ -37,9 +37,11 @@ test("costByDay buckets oldest first", () => {
   assert.deepEqual(costByDay([rec({ cost: 2 }), rec({ ts: NOW - 2 * DAY, cost: 1 })], 3, NOW), [1, 0, 2]);
 });
 
-test("sparkline and bar", () => {
-  assert.equal(sparkline([0, 0]), "▁▁");
-  assert.equal(sparkline([0, 7]), "▁█");
+test("sparkRows and bar", () => {
+  assert.deepEqual(sparkRows([0, 0], 1), ["▁▁"]);
+  assert.deepEqual(sparkRows([0, 8], 1), ["▁█"]);
+  // 2 rows: max fills both, half fills only the bottom row, tiny values keep one eighth.
+  assert.deepEqual(sparkRows([16, 8, 1, 0], 2), ["█   ", "██▁▁"]);
   assert.equal(bar(1, 4), "████");
   assert.equal(bar(0, 4), "····");
 });

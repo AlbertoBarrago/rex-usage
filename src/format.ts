@@ -17,13 +17,29 @@ export function fmtPct(r: number): string {
   return `${(r * 100).toFixed(1)}%`;
 }
 
-/** One Unicode block per value, scaled to the max. Zero stays a flat baseline. */
-export function sparkline(values: number[]): string {
+/**
+ * Multi-row sparkline, top row first. Each column is filled bottom-up with
+ * eighth-block precision across `height` rows; nonzero values always show at
+ * least one eighth so activity never disappears.
+ */
+export function sparkRows(values: number[], height: number): string[] {
   const max = Math.max(...values, 0);
-  if (max === 0) return SPARK[0]!.repeat(values.length);
-  return values
-    .map((v) => SPARK[Math.min(SPARK.length - 1, Math.round((v / max) * (SPARK.length - 1)))]!)
-    .join("");
+  const total = height * 8;
+  const levels = values.map((v) => (max === 0 || v <= 0 ? 0 : Math.max(1, Math.round((v / max) * total))));
+  const rows: string[] = [];
+  for (let r = height - 1; r >= 0; r--) {
+    rows.push(
+      levels
+        .map((l) => {
+          const fill = Math.min(8, Math.max(0, l - r * 8));
+          // Bottom row keeps a faint baseline for empty columns.
+          if (fill === 0) return r === 0 ? "▁" : " ";
+          return SPARK[fill - 1]!;
+        })
+        .join(""),
+    );
+  }
+  return rows;
 }
 
 /** Horizontal bar with eighth-block resolution so small differences stay visible. */

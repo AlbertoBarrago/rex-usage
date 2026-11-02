@@ -11,7 +11,8 @@ import { Table } from "./Table.js";
 const RANGES: ReadonlyArray<number | null> = [1, 7, 30, null];
 const REFRESH_MS = 5_000;
 /** Below this terminal height the header collapses to one line. */
-const FULL_LAYOUT_MIN_ROWS = 32;
+const FULL_LAYOUT_MIN_ROWS = 34;
+const SPARK_ROWS = 3;
 
 interface Props {
   scanner: Scanner;
@@ -29,9 +30,9 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
   const [tick, setTick] = useState(0);
   const [scanning, setScanning] = useState(false);
   const { columns: width, rows } = useWindowSize();
-  // Full layout without table rows takes ~20 lines; the compact header saves 2.
+  // Fixed chrome around the table: ~22 lines in the full layout (3-row charts), ~18 compact.
   const compact = rows < FULL_LAYOUT_MIN_ROWS;
-  const tableRows = Math.max(3, Math.min(10, rows - (compact ? 18 : 20)));
+  const tableRows = Math.max(3, Math.min(10, rows - (compact ? 18 : 22)));
 
   const refresh = useCallback(async () => {
     setScanning(true);
@@ -91,7 +92,7 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
         tick={tick}
         compact={compact}
       />
-      <Spark daily={view$.daily} hourly={view$.hourly} />
+      <Spark daily={view$.daily} hourly={view$.hourly} height={compact ? 1 : SPARK_ROWS} />
       <Table
         title={`${view === "projects" ? "top projects" : "models"} · ${rangeLabel}${projectFilter ? ` · filter "${projectFilter}"` : ""}`}
         groups={view$.groups}
