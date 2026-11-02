@@ -73,16 +73,18 @@ for (const p of PROJECTS) {
     const weekday = new Date(dayStart).getDay();
     // Quieter weekends plus a slow upward trend, so the sparkline has shape.
     const dayFactor = (weekday === 0 || weekday === 6 ? 0.25 : 1) * (0.5 + (DAYS - d) / DAYS) * (0.6 + rand() * 0.8);
-    const messages = Math.round(70 * p.weight * dayFactor);
+    // Today only runs up to the current hour, so scale volume by the elapsed workday.
+    const nowHour = new Date(now).getHours();
+    const span = d === 0 ? Math.max(1, Math.min(10, nowHour - 9 + 1)) : 10;
+    const messages = Math.round(70 * p.weight * dayFactor * (span / 10));
     if (messages === 0) continue;
 
     const sessionId = `demo-${p.name}-${d}`;
     const lines: string[] = [];
     for (let i = 0; i < messages; i++) {
       // Working hours 9-19, skewed to late morning and afternoon.
-      const hour = 9 + Math.floor(Math.pow(rand(), 0.9) * 10);
-      let ts = dayStart + hour * 3_600_000 + Math.floor(rand() * 3_600_000);
-      if (ts > now) ts = now - Math.floor(rand() * 3_600_000);
+      const hour = 9 + Math.floor(Math.pow(rand(), 0.9) * span);
+      const ts = Math.min(now - 1_000, dayStart + hour * 3_600_000 + Math.floor(rand() * 3_600_000));
       const ctx = 20_000 + Math.floor(rand() * 140_000);
       const usage = {
         input_tokens: 1 + Math.floor(rand() * 8),
@@ -105,7 +107,8 @@ for (const p of PROJECTS) {
     const file = join(dir, `${sessionId}.jsonl`);
     writeFileSync(file, `${lines.join("\n")}\n`);
     // Only today's file of "live" projects counts as an active session.
-    const mtime = d === 0 && p.live ? new Date(now) : new Date(dayStart + 20 * 3_600_000);
+    // Never in the future: a future mtime would also count as live.
+    const mtime = d === 0 && p.live ? new Date(now) : new Date(Math.min(dayStart + 20 * 3_600_000, now - 3_600_000));
     utimesSync(file, mtime, mtime);
   }
 }
