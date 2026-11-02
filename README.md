@@ -5,6 +5,7 @@
 **A terminal dashboard for Claude Code token usage and cost, built to live in a Rex pane.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-ff5fd7.svg)](LICENSE)
+[![npm](https://img.shields.io/npm/v/rex-usage.svg?color=ffaf5f)](https://www.npmjs.com/package/rex-usage)
 ![Node](https://img.shields.io/badge/node-%3E%3D22-8787ff.svg)
 ![Built with Ink](https://img.shields.io/badge/built%20with-Ink-5fd7ff.svg)
 
@@ -32,7 +33,7 @@ If you run several Claude Code agents at once, it is hard to tell which project 
 Requires **Node.js 22+**.
 
 ```sh
-npm install -g github:AlbertoBarrago/rex-usage
+npm install -g rex-usage
 ```
 
 Or from a clone:
@@ -72,7 +73,7 @@ The dashboard refreshes every 5 seconds and runs in the terminal's alternate scr
 
 ```sh
 mkdir -p ~/.config/rex
-cp rex/rex-usage.lua ~/.config/rex/
+cp "$(npm root -g)/rex-usage/rex/rex-usage.lua" ~/.config/rex/   # or rex/rex-usage.lua from a clone
 echo 'require("rex-usage")' >> ~/.config/rex/init.lua
 rex config check && rex config reload
 ```

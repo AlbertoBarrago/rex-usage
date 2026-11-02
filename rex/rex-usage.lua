@@ -1,7 +1,7 @@
 -- rex-usage: open the Claude Code usage dashboard beside the focused pane.
 --
 -- Install:
---   cp rex/rex-usage.lua ~/.config/rex/
+--   cp "$(npm root -g)/rex-usage/rex/rex-usage.lua" ~/.config/rex/
 --   echo 'require("rex-usage")' >> ~/.config/rex/init.lua
 --   rex config check && rex config reload
 --
