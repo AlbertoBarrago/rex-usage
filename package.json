@@ -6,7 +6,9 @@
     "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
     "dev": "tsx src/cli.tsx",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "demo": "tsx src/cli.tsx --root \"$(tsx scripts/demo-data.ts)\"",
+    "demo:data": "tsx scripts/demo-data.ts"
   },
   "author": "Alberto Barrago",
   "license": "MIT",

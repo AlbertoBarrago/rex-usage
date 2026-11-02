@@ -11,7 +11,7 @@ Usage: rex-usage [options]
 Options:
   -d, --days <n|all>     initial range: 1, 7, 30 or all (default 7)
   -p, --project <text>   only projects whose name contains <text>
-      --root <dir>       transcripts root (default ${DEFAULT_ROOT})
+      --root <dir>       transcripts root (env REX_USAGE_ROOT, default ${DEFAULT_ROOT})
   -h, --help             show this help
 
 Keys: tab view · d range · r refresh · q quit`;
@@ -36,7 +36,7 @@ try {
     console.log(HELP);
     process.exit(0);
   }
-  const scanner = new Scanner(values.root ?? DEFAULT_ROOT);
+  const scanner = new Scanner(values.root ?? process.env.REX_USAGE_ROOT ?? DEFAULT_ROOT);
   render(<App scanner={scanner} initialDays={parseDays(values.days)} projectFilter={values.project} />, {
     alternateScreen: true,
   });
