@@ -1,0 +1,8 @@
+{"timestamp":"2029-12-31T10:00:00.000Z","type":"session_meta","payload":{"id":"sess-a","cwd":"/Users/x/Code/alpha"}}
+{"timestamp":"2029-12-31T10:00:01.000Z","type":"event_msg","payload":{"type":"token_count","info":null}}
+{"timestamp":"2029-12-31T10:00:02.000Z","type":"turn_context","payload":{"model":"gpt-6.1-sol","cwd":"/Users/x/Code/alpha"}}
+{"timestamp":"2029-12-31T10:00:03.000Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":1000000,"cached_input_tokens":400000,"output_tokens":100000,"reasoning_output_tokens":50000,"total_tokens":1100000},"last_token_usage":{"input_tokens":1000000,"cached_input_tokens":400000,"output_tokens":100000,"reasoning_output_tokens":50000,"total_tokens":1100000}}}}
+{"timestamp":"2029-12-31T10:00:04.000Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":1000000,"cached_input_tokens":400000,"output_tokens":100000,"reasoning_output_tokens":50000,"total_tokens":1100000},"last_token_usage":{"input_tokens":1000000,"cached_input_tokens":400000,"output_tokens":100000,"reasoning_output_tokens":50000,"total_tokens":1100000}}}}
+not json
+{"timestamp":"2029-12-31T10:00:05.000Z","type":"turn_context","payload":{"model":"gpt-reserve","cwd":"/Users/x/Code/alpha"}}
+{"timestamp":"2029-12-31T10:00:06.000Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":1000100,"cached_input_tokens":400000,"output_tokens":100010,"reasoning_output_tokens":50000,"total_tokens":1100110},"last_token_usage":{"input_tokens":100,"cached_input_tokens":0,"output_tokens":10,"reasoning_output_tokens":0,"total_tokens":110}}}}

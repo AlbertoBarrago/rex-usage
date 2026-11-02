@@ -18,7 +18,7 @@ Set WindowBar Colorful
 Set WindowBarSize 36
 
 Hide
-Type "export REX_USAGE_ROOT=$(npx tsx scripts/demo-data.ts) && clear"
+Type "d=$(npx tsx scripts/demo-data.ts) && export REX_USAGE_ROOT=$d/projects REX_USAGE_CODEX_HOME=$d/codex && clear"
 Enter
 Sleep 4s
 Show

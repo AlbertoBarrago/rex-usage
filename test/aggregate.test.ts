@@ -9,7 +9,7 @@ const DAY = 86_400_000;
 
 function rec(p: Partial<UsageRecord>): UsageRecord {
   return {
-    key: Math.random().toString(), ts: NOW, model: "claude-opus-5-5", project: "a", sessionId: "s",
+    key: Math.random().toString(), source: "claude", ts: NOW, model: "claude-opus-5-5", project: "a", sessionId: "s",
     input: 0, output: 0, cacheRead: 0, cacheWrite5m: 0, cacheWrite1h: 0, cost: 0, ...p,
   };
 }

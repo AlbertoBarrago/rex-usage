@@ -14,19 +14,25 @@ const REFRESH_MS = 5_000;
 const FULL_LAYOUT_MIN_ROWS = 34;
 const SPARK_ROWS = 3;
 
+/** Cycled with `s`: both agents together, or one at a time. */
+export const SOURCE_FILTERS = ["all", "claude", "codex"] as const;
+export type SourceFilter = (typeof SOURCE_FILTERS)[number];
+
 interface Props {
   scanner: Scanner;
   initialDays: number | null;
+  initialSource: SourceFilter;
   projectFilter?: string;
 }
 
 type View = "projects" | "models";
 
-export function App({ scanner, initialDays, projectFilter }: Props) {
+export function App({ scanner, initialDays, initialSource, projectFilter }: Props) {
   const { exit } = useApp();
   const [data, setData] = useState<ScanResult | null>(null);
   const [view, setView] = useState<View>("projects");
   const [rangeIdx, setRangeIdx] = useState(() => Math.max(0, RANGES.indexOf(initialDays)));
+  const [sourceIdx, setSourceIdx] = useState(() => Math.max(0, SOURCE_FILTERS.indexOf(initialSource)));
   const [tick, setTick] = useState(0);
   const [scanning, setScanning] = useState(false);
   const { columns: width, rows } = useWindowSize();
@@ -54,16 +60,20 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
     if (input === "q" || key.escape) exit();
     else if (key.tab) setView((v) => (v === "projects" ? "models" : "projects"));
     else if (input === "d") setRangeIdx((i) => (i + 1) % RANGES.length);
+    else if (input === "s") setSourceIdx((i) => (i + 1) % SOURCE_FILTERS.length);
     else if (input === "r") void refresh();
   });
 
   const days = RANGES[rangeIdx] ?? null;
   const rangeLabel = days === null ? "all time" : days === 1 ? "today" : `${days} days`;
+  const source = SOURCE_FILTERS[sourceIdx] ?? "all";
 
   const view$ = useMemo(() => {
     if (!data) return null;
     const filter = projectFilter?.toLowerCase();
-    const all = filter ? data.records.filter((r) => r.project.toLowerCase().includes(filter)) : data.records;
+    const all = data.records.filter(
+      (r) => (source === "all" || r.source === source) && (!filter || r.project.toLowerCase().includes(filter)),
+    );
     const inRange = since(all, days);
     const groups =
       view === "projects" ? groupBy(inRange, (r) => r.project) : groupBy(inRange, (r) => shortModel(r.model));
@@ -75,10 +85,10 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
       hourly: outputByHourToday(all),
       groups,
     };
-  }, [data, days, view, projectFilter]);
+  }, [data, days, view, source, projectFilter]);
 
   if (!data || !view$) {
-    return <Text color="#ff5fd7">⠋ scanning ~/.claude/projects …</Text>;
+    return <Text color="#ff5fd7">⠋ scanning transcripts …</Text>;
   }
 
   return (
@@ -91,10 +101,11 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
         active={data.activeSessions}
         tick={tick}
         compact={compact}
+        source={source}
       />
       <Spark daily={view$.daily} hourly={view$.hourly} height={compact ? 1 : SPARK_ROWS} />
       <Table
-        title={`${view === "projects" ? "top projects" : "models"} · ${rangeLabel}${projectFilter ? ` · filter "${projectFilter}"` : ""}`}
+        title={`${view === "projects" ? "top projects" : "models"} · ${rangeLabel} · ${source}${projectFilter ? ` · filter "${projectFilter}"` : ""}`}
         groups={view$.groups}
         showModels={view === "projects"}
         width={width}
@@ -102,7 +113,7 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
       />
       <Box justifyContent="space-between">
         <Text dimColor wrap="truncate">
-          <Text color="#8787ff">tab</Text> view  <Text color="#8787ff">d</Text> range  <Text color="#8787ff">r</Text>{" "}
+          <Text color="#8787ff">tab</Text> view  <Text color="#8787ff">d</Text> range  <Text color="#8787ff">s</Text> source  <Text color="#8787ff">r</Text>{" "}
           refresh  <Text color="#8787ff">q</Text> quit
         </Text>
         <Text dimColor wrap="truncate">

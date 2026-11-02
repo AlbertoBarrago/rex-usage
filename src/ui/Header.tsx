@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import { cacheHitRatio, type Totals } from "../aggregate.js";
 import { fmtPct, fmtTokens, fmtUsd } from "../format.js";
+import type { SourceFilter } from "./App.js";
 
 const BANNER = [
   "█▀█ █▀▀ ▀▄▀ ╱╱ █ █ █▀ ▄▀█ █▀▀ █▀▀",
@@ -18,7 +19,14 @@ interface Props {
   tick: number;
   /** Single-line title instead of the two-row banner, for short panes. */
   compact: boolean;
+  source: SourceFilter;
 }
+
+const SUBTITLE: Record<SourceFilter, string> = {
+  all: "claude code + codex token telemetry",
+  claude: "claude code token telemetry",
+  codex: "codex token telemetry",
+};
 
 function Kpi({ label, value, color }: { label: string; value: string; color: string }) {
   return (
@@ -31,7 +39,7 @@ function Kpi({ label, value, color }: { label: string; value: string; color: str
   );
 }
 
-export function Header({ today, week, range, rangeLabel, active, tick, compact }: Props) {
+export function Header({ today, week, range, rangeLabel, active, tick, compact, source }: Props) {
   // Pulsing dot: alternates every refresh tick while sessions are live.
   const dot = active > 0 ? (tick % 2 ? "●" : "○") : "·";
   return (
@@ -54,7 +62,7 @@ export function Header({ today, week, range, rangeLabel, active, tick, compact }
           <Text color={active > 0 ? "green" : "gray"}>
             {dot} {active} live session{active === 1 ? "" : "s"}
           </Text>
-          {!compact && <Text dimColor>claude code token telemetry</Text>}
+          {!compact && <Text dimColor>{SUBTITLE[source]}</Text>}
         </Box>
       </Box>
       <Box marginTop={compact ? 0 : 1} borderStyle="round" borderColor="#5f5f87" paddingX={1}>

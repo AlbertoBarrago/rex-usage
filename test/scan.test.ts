@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import { test } from "node:test";
 import { costOf } from "../src/pricing.js";
-import { Scanner } from "../src/scan.js";
+import { claudeSource, Scanner } from "../src/scan.js";
 
 const ROOT = join(import.meta.dirname, "fixtures", "projects");
 
 test("scanner dedups streamed messages, reads subagents, counts malformed lines", async () => {
-  const res = await new Scanner(ROOT).scan(Date.parse("2030-01-01"));
+  const res = await new Scanner([claudeSource(ROOT)]).scan(Date.parse("2030-01-01"));
   assert.equal(res.skipped, 1);
   assert.equal(res.records.length, 2);
   const m1 = res.records.find((r) => r.key === "m1:r1");

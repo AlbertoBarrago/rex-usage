@@ -2,7 +2,7 @@
 
 # rex-usage
 
-**A terminal dashboard for Claude Code token usage and cost, built to live in a Rex pane.**
+**A terminal dashboard for Claude Code and Codex token usage and cost, built to live in a Rex pane.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-ff5fd7.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/rex-usage.svg?color=ffaf5f)](https://www.npmjs.com/package/rex-usage)
@@ -15,16 +15,17 @@
 
 ---
 
-If you run several Claude Code agents at once, it is hard to tell which project burns the most tokens, how much of your context comes from cache, or what a busy day would cost on the API. `rex-usage` reads the transcripts Claude Code already writes to disk and turns them into a live dashboard. It needs no setup, has no network access, and adds no telemetry.
+If you run several Claude Code agents at once, it is hard to tell which project burns the most tokens, how much of your context comes from cache, or what a busy day would cost on the API. `rex-usage` reads the transcripts Claude Code and the Codex CLI already write to disk and turns them into a live dashboard. It needs no setup, has no network access, and adds no telemetry.
 
 ## Features
 
-- **Cost at a glance.** Today, last 7 days, and any range (1, 7, 30 days or all time), estimated at Anthropic API list prices.
+- **Cost at a glance.** Today, last 7 days, and any range (1, 7, 30 days or all time), estimated at Anthropic and OpenAI API list prices.
+- **Claude Code and Codex.** Both agents in one view, or one at a time: press `s` to cycle `all` / `claude` / `codex`. A project used with both shows their combined usage.
 - **Token breakdown.** Input, output, cache reads and cache writes (5 minute and 1 hour TTL), plus your cache hit ratio.
 - **Trends.** A 30-day cost chart and a per-hour output chart for today, colored by intensity.
 - **Per project or per model.** Ranked tables with the models used and a share bar. Press `tab` to switch.
 - **Live sessions.** A pulsing indicator counts transcripts written in the last 5 minutes, so you can see how many agents are working right now.
-- **Subagents included.** Usage from subagent transcripts (`<session>/subagents/*.jsonl`) is counted too.
+- **Subagents included.** Usage from subagent transcripts (`<session>/subagents/*.jsonl`) is counted too, and so are archived Codex sessions.
 - **Fits any pane.** Columns adapt to the width, and in short panes the header collapses to one line and the charts shrink.
 - **Rex integration.** A Lua action opens the dashboard beside the focused pane with one key.
 
@@ -52,14 +53,17 @@ Want to look around before pointing it at your own data? `npm run demo` starts i
 ```sh
 rex-usage                 # last 7 days
 rex-usage -d 30           # initial range: 1, 7, 30 or all
+rex-usage -s codex        # initial source: all, claude or codex
 rex-usage -p api          # only projects whose name contains "api"
-rex-usage --root <dir>    # read transcripts from another directory (env: REX_USAGE_ROOT)
+rex-usage --root <dir>    # read Claude transcripts from another directory (env: REX_USAGE_ROOT)
+rex-usage --codex-home <dir>  # Codex home (env: REX_USAGE_CODEX_HOME, then CODEX_HOME, default ~/.codex)
 ```
 
 | Key   | Action                          |
 | ----- | ------------------------------- |
 | `tab` | switch between projects and models |
 | `d`   | cycle range: 1 / 7 / 30 / all days |
+| `s`   | cycle source: all / claude / codex |
 | `r`   | refresh now                     |
 | `q`   | quit                            |
 
@@ -100,9 +104,11 @@ rex split -s "$REX_SESSION" -b "$REX_BLOCK" --split=right --ratio 40 --label Usa
 
 Claude Code stores every conversation as JSON Lines under `~/.claude/projects/<project>/`. Each assistant turn carries the model id and a `usage` object.
 
-1. **Scan.** All `*.jsonl` files are read recursively, subagent transcripts included.
-2. **Deduplicate.** Claude Code writes the same message several times while it streams. Records are keyed by `message.id + requestId`, and only the last write (which has the final usage) is kept.
-3. **Price.** Each record is priced with the table in [`src/pricing.ts`](src/pricing.ts): input, output, cache reads, and 5m/1h cache writes at their multipliers.
+The Codex CLI writes one rollout per session under `~/.codex/sessions/YYYY/MM/DD/` (and `archived_sessions/`). The model and working directory come from `turn_context` lines, and each request is a `token_count` event.
+
+1. **Scan.** All `*.jsonl` files are read recursively, subagent transcripts and archived Codex sessions included. A missing `~/.codex` is fine: Codex is optional.
+2. **Deduplicate.** Claude Code writes the same message several times while it streams. Records are keyed by `message.id + requestId`, and only the last write (which has the final usage) is kept. Codex repeats `token_count` events with an unchanged running total, and forked sessions copy earlier events: both are dropped.
+3. **Price.** Each record is priced with the table in [`src/pricing.ts`](src/pricing.ts): input, output, cache reads, and 5m/1h cache writes at their multipliers. Codex reports cached tokens inside its input count, so they are moved to cache reads; reasoning tokens are already part of output. OpenAI models switch to their long-context rates when a request's prompt exceeds 272K tokens.
 4. **Aggregate and render.** Pure functions group the records by day, hour, project and model, and Ink components draw the dashboard.
 5. **Refresh.** Every 5 seconds, files whose size or mtime changed are re-read. Everything else comes from an in-memory cache, so refreshing stays cheap even with thousands of transcripts.
 
@@ -110,7 +116,7 @@ Malformed lines are never dropped silently. They are counted in the footer as `s
 
 ## About the numbers
 
-- **Costs are estimates** at public API list prices. On a Claude Pro or Max subscription you are not billed per token, so read them as "what this usage would cost on the API".
+- **Costs are estimates** at public API list prices. On a Claude Pro or Max subscription, or a ChatGPT plan with Codex, you are not billed per token, so read them as "what this usage would cost on the API".
 - Models missing from the price table show a `?` before their cost, and their cost is not added to the totals.
 - Prices change. If a model is missing or out of date, update [`src/pricing.ts`](src/pricing.ts) (pull requests welcome).
 
@@ -133,7 +139,8 @@ Project layout:
 
 | Path | What it does |
 | --- | --- |
-| `src/scan.ts` | transcript reader, deduplication, incremental cache |
+| `src/scan.ts` | Claude transcript reader, deduplication, incremental multi-source scanner |
+| `src/codex.ts` | Codex rollout reader |
 | `src/pricing.ts` | price table and cost function |
 | `src/aggregate.ts` | pure aggregations (ranges, groups, daily and hourly buckets) |
 | `src/format.ts` | number formatting, multi-row sparklines, bars |

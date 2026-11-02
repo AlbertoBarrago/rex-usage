@@ -1,13 +1,13 @@
 {
   "name": "rex-usage",
   "version": "0.1.0",
-  "description": "Terminal dashboard for Claude Code token usage and cost, built for Rex panes",
+  "description": "Terminal dashboard for Claude Code and Codex token usage and cost, built for Rex panes",
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
     "dev": "tsx src/cli.tsx",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --test test/*.test.ts",
-    "demo": "tsx src/cli.tsx --root \"$(tsx scripts/demo-data.ts)\"",
+    "demo": "d=\"$(tsx scripts/demo-data.ts)\" && tsx src/cli.tsx --root \"$d/projects\" --codex-home \"$d/codex\"",
     "demo:data": "tsx scripts/demo-data.ts",
     "prepare": "npm run build"
   },
@@ -43,7 +43,9 @@
     "rex",
     "token-usage",
     "llm-cost",
-    "anthropic"
+    "anthropic",
+    "codex",
+    "openai"
   ],
   "repository": {
     "type": "git",
