@@ -16,6 +16,8 @@ interface Props {
   rangeLabel: string;
   active: number;
   tick: number;
+  /** Single-line title instead of the two-row banner, for short panes. */
+  compact: boolean;
 }
 
 function Kpi({ label, value, color }: { label: string; value: string; color: string }) {
@@ -29,27 +31,33 @@ function Kpi({ label, value, color }: { label: string; value: string; color: str
   );
 }
 
-export function Header({ today, week, range, rangeLabel, active, tick }: Props) {
+export function Header({ today, week, range, rangeLabel, active, tick, compact }: Props) {
   // Pulsing dot: alternates every refresh tick while sessions are live.
   const dot = active > 0 ? (tick % 2 ? "●" : "○") : "·";
   return (
     <Box flexDirection="column">
       <Box justifyContent="space-between">
-        <Box flexDirection="column">
-          {BANNER.map((line, i) => (
-            <Text key={i} color={GRADIENT[i]}>
-              {line}
-            </Text>
-          ))}
-        </Box>
+        {compact ? (
+          <Text bold color={GRADIENT[0]}>
+            REX<Text color={GRADIENT[1]}>//USAGE</Text>
+          </Text>
+        ) : (
+          <Box flexDirection="column">
+            {BANNER.map((line, i) => (
+              <Text key={i} color={GRADIENT[i]}>
+                {line}
+              </Text>
+            ))}
+          </Box>
+        )}
         <Box flexDirection="column" alignItems="flex-end">
           <Text color={active > 0 ? "green" : "gray"}>
             {dot} {active} live session{active === 1 ? "" : "s"}
           </Text>
-          <Text dimColor>claude code token telemetry</Text>
+          {!compact && <Text dimColor>claude code token telemetry</Text>}
         </Box>
       </Box>
-      <Box marginTop={1} borderStyle="round" borderColor="#5f5f87" paddingX={1}>
+      <Box marginTop={compact ? 0 : 1} borderStyle="round" borderColor="#5f5f87" paddingX={1}>
         <Kpi label="today" value={fmtUsd(today.cost)} color="#ffd75f" />
         <Kpi label="7 days" value={fmtUsd(week.cost)} color="#ffaf5f" />
         {/* Only add a range cost tile when it differs from the two fixed ones. */}

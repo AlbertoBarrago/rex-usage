@@ -10,6 +10,8 @@ import { Table } from "./Table.js";
 /** `null` means all time. */
 const RANGES: ReadonlyArray<number | null> = [1, 7, 30, null];
 const REFRESH_MS = 5_000;
+/** Below this terminal height the header collapses to one line. */
+const FULL_LAYOUT_MIN_ROWS = 32;
 
 interface Props {
   scanner: Scanner;
@@ -26,7 +28,10 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
   const [rangeIdx, setRangeIdx] = useState(() => Math.max(0, RANGES.indexOf(initialDays)));
   const [tick, setTick] = useState(0);
   const [scanning, setScanning] = useState(false);
-  const { columns: width } = useWindowSize();
+  const { columns: width, rows } = useWindowSize();
+  // Full layout without table rows takes ~20 lines; the compact header saves 2.
+  const compact = rows < FULL_LAYOUT_MIN_ROWS;
+  const tableRows = Math.max(3, Math.min(10, rows - (compact ? 18 : 20)));
 
   const refresh = useCallback(async () => {
     setScanning(true);
@@ -84,6 +89,7 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
         rangeLabel={rangeLabel}
         active={data.activeSessions}
         tick={tick}
+        compact={compact}
       />
       <Spark daily={view$.daily} hourly={view$.hourly} />
       <Table
@@ -91,6 +97,7 @@ export function App({ scanner, initialDays, projectFilter }: Props) {
         groups={view$.groups}
         showModels={view === "projects"}
         width={width}
+        limit={tableRows}
       />
       <Box justifyContent="space-between">
         <Text dimColor wrap="truncate">
