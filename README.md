@@ -9,7 +9,7 @@
 ![Node](https://img.shields.io/badge/node-%3E%3D22-8787ff.svg)
 ![Built with Ink](https://img.shields.io/badge/built%20with-Ink-5fd7ff.svg)
 
-<img src="demo/rex-usage.gif" alt="rex-usage demo: dashboard with cost KPIs, daily and hourly charts, and a per-project table" width="900">
+<img src="demo/rex-usage.gif" alt="rex-usage demo: dashboard with cost KPIs, daily and hourly charts, a per-project table, and the Claude/Codex source filter" width="900">
 
 </div>
 

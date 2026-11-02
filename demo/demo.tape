@@ -35,6 +35,14 @@ Sleep 2.5s
 Tab
 Sleep 1s
 
+# Cycle sources: all -> claude -> codex -> all
+Type "s"
+Sleep 2.5s
+Type "s"
+Sleep 2.5s
+Type "s"
+Sleep 1.5s
+
 # Cycle ranges: 7d -> 30d -> all -> today
 Type "d"
 Sleep 2s
