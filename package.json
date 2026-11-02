@@ -1,14 +1,15 @@
 {
   "name": "rex-usage",
   "version": "0.1.0",
-  "description": "Nerdy TUI for Claude Code token and cost usage",
+  "description": "Terminal dashboard for Claude Code token usage and cost, built for Rex panes",
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
     "dev": "tsx src/cli.tsx",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --test test/*.test.ts",
     "demo": "tsx src/cli.tsx --root \"$(tsx scripts/demo-data.ts)\"",
-    "demo:data": "tsx scripts/demo-data.ts"
+    "demo:data": "tsx scripts/demo-data.ts",
+    "prepare": "npm run build"
   },
   "author": "Alberto Barrago",
   "license": "MIT",
@@ -27,9 +28,29 @@
     "rex-usage": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "rex"
   ],
   "engines": {
     "node": ">=22"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "tui",
+    "ink",
+    "cli",
+    "rex",
+    "token-usage",
+    "llm-cost",
+    "anthropic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlbertoBarrago/rex-usage.git"
+  },
+  "homepage": "https://github.com/AlbertoBarrago/rex-usage#readme",
+  "bugs": {
+    "url": "https://github.com/AlbertoBarrago/rex-usage/issues"
   }
 }
