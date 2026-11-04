@@ -1,6 +1,6 @@
 {
   "name": "rex-usage",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Terminal dashboard for Claude Code and Codex token usage and cost, built for Rex panes",
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
