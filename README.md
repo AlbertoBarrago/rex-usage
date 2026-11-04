@@ -23,7 +23,8 @@ If you run several Claude Code agents at once, it is hard to tell which project 
 - **Claude Code and Codex.** Both agents in one view, or one at a time: press `s` to cycle `all` / `claude` / `codex`. A project used with both shows their combined usage.
 - **Token breakdown.** Input, output, cache reads and cache writes (5 minute and 1 hour TTL), plus your cache hit ratio.
 - **Trends.** A 30-day cost chart and a per-hour output chart for today, colored by intensity.
-- **Per project or per model.** Ranked tables with the models used and a share bar. Press `tab` to switch.
+- **Per project, per model or per session.** Ranked tables with the models used and a share bar. Press `tab` to cycle.
+- **Drill down.** Open a project or model to list its sessions, then open a session for its duration, burn rate ($/h), cache hit ratio, per-model split, and an output-over-time chart. Vim keys (`j`/`k`, `g`/`G`, `ctrl+d`/`ctrl+u`, `l`/`h`) or arrows, `enter` and `esc`.
 - **Live sessions.** A pulsing indicator counts transcripts written in the last 5 minutes, so you can see how many agents are working right now.
 - **Subagents included.** Usage from subagent transcripts (`<session>/subagents/*.jsonl`) is counted too, and so are archived Codex sessions.
 - **Fits any pane.** Columns adapt to the width, and in short panes the header collapses to one line and the charts shrink.
@@ -59,13 +60,18 @@ rex-usage --root <dir>    # read Claude transcripts from another directory (env:
 rex-usage --codex-home <dir>  # Codex home (env: REX_USAGE_CODEX_HOME, then CODEX_HOME, default ~/.codex)
 ```
 
-| Key   | Action                          |
-| ----- | ------------------------------- |
-| `tab` | switch between projects and models |
-| `d`   | cycle range: 1 / 7 / 30 / all days |
-| `s`   | cycle source: all / claude / codex |
-| `r`   | refresh now                     |
-| `q`   | quit                            |
+| Key | Action |
+| --- | --- |
+| `j` / `k`, `↓` / `↑` | move the cursor |
+| `g` / `G`, `home` / `end` | jump to the first / last row |
+| `ctrl+d` / `ctrl+u`, `pgdn` / `pgup` | half page / full page down and up |
+| `enter`, `l`, `→` | open: project or model to its sessions, session to its detail |
+| `esc`, `h`, `←`, `backspace` | back one level (the cursor returns to the row you opened) |
+| `tab` | cycle top-level view: projects / models / sessions |
+| `d` | cycle range: 1 / 7 / 30 / all days |
+| `s` | cycle source: all / claude / codex |
+| `r` | refresh now |
+| `q` | quit |
 
 The dashboard refreshes every 5 seconds and runs in the terminal's alternate screen, so quitting gives you your scrollback back untouched.
 

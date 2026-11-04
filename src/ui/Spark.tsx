@@ -16,7 +16,7 @@ function heatColor(v: number, max: number): string {
   return HEAT[Math.min(HEAT.length - 1, Math.ceil((v / max) * (HEAT.length - 1)))]!;
 }
 
-function Chart({ values, height }: { values: number[]; height: number }) {
+export function Chart({ values, height }: { values: number[]; height: number }) {
   const max = Math.max(...values, 0);
   const colors = values.map((v) => heatColor(v, max));
   return (

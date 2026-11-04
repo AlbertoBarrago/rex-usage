@@ -72,6 +72,12 @@ const rand = prng(today.getTime() / DAY_MS);
 
 rmSync(OUT, { recursive: true, force: true });
 
+/** Deterministic UUID-shaped session id, so short ids look like real ones. */
+function uuid(): string {
+  const hex = (n: number) => Array.from({ length: n }, () => Math.floor(rand() * 16).toString(16)).join("");
+  return `${hex(8)}-${hex(4)}-4${hex(3)}-${hex(4)}-${hex(12)}`;
+}
+
 /** One Claude Code transcript line. */
 function claudeLine(ts: number, sessionId: string, cwd: string, i: number, model: string, ctx: number): string[] {
   const usage = {
@@ -137,23 +143,32 @@ for (const p of PROJECTS) {
     const messages = Math.round(70 * p.weight * dayFactor * (span / 10));
     if (messages === 0) continue;
 
-    const sessionId = `demo-${p.source}-${p.name}-${d}`;
-    const lines: string[] = codex
-      ? [JSON.stringify({ timestamp: new Date(dayStart).toISOString(), type: "session_meta", payload: { id: sessionId, cwd } })]
-      : [];
-    for (let i = 0; i < messages; i++) {
-      // Working hours 9-19, skewed to late morning and afternoon.
-      const hour = 9 + Math.floor(Math.pow(rand(), 0.9) * span);
-      const ts = Math.min(now - 1_000, dayStart + hour * 3_600_000 + Math.floor(rand() * 3_600_000));
-      const ctx = 20_000 + Math.floor(rand() * 140_000);
-      lines.push(...(codex ? codexLines : claudeLine)(ts, sessionId, cwd, i, pick(p.models, rand()), ctx));
+    // Split the workday into 1-3 back-to-back sessions so drill-down has something to show.
+    const sessions = messages > 20 ? 1 + Math.floor(rand() * 3) : 1;
+    for (let k = 0; k < sessions; k++) {
+      const sessionId = uuid();
+      const live = d === 0 && p.live && k === sessions - 1;
+      const count = Math.round(messages / sessions);
+      const from = 9 + (k * span) / sessions;
+      const width = span / sessions;
+      const lines: string[] = codex
+        ? [JSON.stringify({ timestamp: new Date(dayStart).toISOString(), type: "session_meta", payload: { id: sessionId, cwd } })]
+        : [];
+      for (let i = 0; i < count; i++) {
+        // Working hours 9-19, skewed to late morning and afternoon.
+        const hour = from + Math.pow(rand(), 0.9) * width;
+        // A live session's last message lands just now, so the table shows its live dot.
+        const ts = live && i === count - 1 ? now - 30_000 : Math.min(now - 1_000, dayStart + Math.floor(hour * 3_600_000));
+        const ctx = 20_000 + Math.floor(rand() * 140_000);
+        lines.push(...(codex ? codexLines : claudeLine)(ts, sessionId, cwd, i, pick(p.models, rand()), ctx));
+      }
+      const file = join(dir, codex ? `rollout-${sessionId}.jsonl` : `${sessionId}.jsonl`);
+      writeFileSync(file, `${lines.join("\n")}\n`);
+      // Only the last of today's files of "live" projects counts as an active session.
+      // Never in the future: a future mtime would also count as live.
+      const mtime = live ? new Date(now) : new Date(Math.min(dayStart + 20 * 3_600_000, now - 3_600_000));
+      utimesSync(file, mtime, mtime);
     }
-    const file = join(dir, codex ? `rollout-${sessionId}.jsonl` : `${sessionId}.jsonl`);
-    writeFileSync(file, `${lines.join("\n")}\n`);
-    // Only today's file of "live" projects counts as an active session.
-    // Never in the future: a future mtime would also count as live.
-    const mtime = d === 0 && p.live ? new Date(now) : new Date(Math.min(dayStart + 20 * 3_600_000, now - 3_600_000));
-    utimesSync(file, mtime, mtime);
   }
 }
 

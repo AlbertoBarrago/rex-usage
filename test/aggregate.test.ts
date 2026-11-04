@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cacheHitRatio, costByDay, groupBy, since, totals } from "../src/aggregate.js";
-import { bar, sparkRows } from "../src/format.js";
+import {
+  burnRate,
+  cacheHitRatio,
+  costByDay,
+  groupBy,
+  groupSessions,
+  isLive,
+  outputOverTime,
+  since,
+  totals,
+} from "../src/aggregate.js";
+import { bar, fmtDuration, shortId, sparkRows } from "../src/format.js";
 import type { UsageRecord } from "../src/scan.js";
 
 const NOW = new Date(2026, 10, 2, 15, 0).getTime();
@@ -44,4 +54,42 @@ test("sparkRows and bar", () => {
   assert.deepEqual(sparkRows([16, 8, 1, 0], 2), ["█   ", "██▁▁"]);
   assert.equal(bar(1, 4), "████");
   assert.equal(bar(0, 4), "····");
+});
+
+test("groupSessions: span, latest project, most recent first", () => {
+  const ss = groupSessions([
+    rec({ sessionId: "old", ts: NOW - DAY, cost: 5 }),
+    rec({ sessionId: "new", ts: NOW - 3_600_000, project: "a", cost: 1, model: "claude-haiku-5-5" }),
+    rec({ sessionId: "new", ts: NOW, project: "b", cost: 2 }),
+  ]);
+  assert.deepEqual(ss.map((s) => s.id), ["new", "old"]);
+  const s = ss[0]!;
+  assert.equal(s.start, NOW - 3_600_000);
+  assert.equal(s.end, NOW);
+  assert.equal(s.project, "b");
+  assert.equal(s.cost, 3);
+  assert.equal(s.models.size, 2);
+  assert.equal(burnRate(s), 3);
+  assert.equal(isLive(s, NOW + 60_000), true);
+  assert.equal(isLive(s, NOW + 10 * 60_000), false);
+});
+
+test("burnRate clamps sub-minute sessions to one minute", () => {
+  const [s] = groupSessions([rec({ cost: 1 })]);
+  assert.equal(burnRate(s!), 60);
+});
+
+test("outputOverTime buckets the session span, end inclusive", () => {
+  const rs = [rec({ ts: 0, output: 1 }), rec({ ts: 50, output: 2 }), rec({ ts: 100, output: 4 })];
+  assert.deepEqual(outputOverTime(rs, 0, 100, 4), [1, 0, 2, 4]);
+  assert.deepEqual(outputOverTime([rec({ ts: 5, output: 3 })], 5, 5, 3), [3, 0, 0]);
+});
+
+test("fmtDuration and shortId", () => {
+  assert.equal(fmtDuration(42_000), "42s");
+  assert.equal(fmtDuration(17 * 60_000), "17m");
+  assert.equal(fmtDuration(72 * 60_000), "1h12m");
+  assert.equal(fmtDuration(76 * 3_600_000), "3d4h");
+  assert.equal(shortId("3f9a1c2e-0000"), "3f9a1c2e");
+  assert.equal(shortId(""), "unknown");
 });

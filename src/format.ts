@@ -59,3 +59,32 @@ export function shortModel(model: string): string {
 export function truncate(s: string, n: number): string {
   return s.length <= n ? s.padEnd(n) : `${s.slice(0, n - 1)}…`;
 }
+
+/** Compact duration: `42s`, `17m`, `1h12m`, `3d4h`. */
+export function fmtDuration(ms: number): string {
+  const m = Math.floor(ms / 60_000);
+  if (m < 1) return `${Math.max(0, Math.round(ms / 1000))}s`;
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h${String(m % 60).padStart(2, "0")}m`;
+  return `${Math.floor(h / 24)}d${h % 24}h`;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** Local `MM-DD HH:MM`. */
+export function fmtStamp(ts: number): string {
+  const d = new Date(ts);
+  return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** Local `HH:MM`. */
+export function fmtClock(ts: number): string {
+  const d = new Date(ts);
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/** First 8 chars of a session id (UUIDs are unique enough there); empty ids show as `unknown`. */
+export function shortId(id: string): string {
+  return id ? id.slice(0, 8) : "unknown";
+}

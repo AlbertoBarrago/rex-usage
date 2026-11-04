@@ -1,4 +1,4 @@
-import type { UsageRecord } from "./scan.js";
+import type { Source, UsageRecord } from "./scan.js";
 
 export interface Totals {
   input: number;
@@ -92,4 +92,61 @@ export function outputByHourToday(records: UsageRecord[], now = Date.now()): num
     buckets[new Date(r.ts).getHours()]! += r.output;
   }
   return buckets;
+}
+
+export interface Session extends Group {
+  /** Full session id; `name` holds the same value so sessions fit the generic table. */
+  id: string;
+  /** Project of the latest record: a resumed session may have moved directory. */
+  project: string;
+  source: Source;
+  start: number;
+  end: number;
+}
+
+/** A session counts as live when its last record is this recent. */
+export const LIVE_WINDOW_MS = 5 * 60_000;
+
+/** Records grouped by session, most recently active first. */
+export function groupSessions(records: UsageRecord[]): Session[] {
+  const map = new Map<string, Session>();
+  for (const r of records) {
+    let s = map.get(r.sessionId);
+    if (!s) {
+      s = { ...empty(), name: r.sessionId, id: r.sessionId, models: new Set(), project: r.project, source: r.source, start: r.ts, end: r.ts };
+      map.set(r.sessionId, s);
+    }
+    add(s, r);
+    s.models.add(r.model);
+    if (r.ts < s.start) s.start = r.ts;
+    if (r.ts >= s.end) {
+      s.end = r.ts;
+      s.project = r.project;
+    }
+  }
+  return [...map.values()].sort((a, b) => b.end - a.end);
+}
+
+export function isLive(s: Session, now = Date.now()): boolean {
+  return now - s.end < LIVE_WINDOW_MS;
+}
+
+/**
+ * Cost per hour of wall-clock session time. Durations shorter than a minute are
+ * clamped to one, so a single-message session does not report an absurd rate.
+ */
+export function burnRate(s: Session): number {
+  return s.cost / (Math.max(s.end - s.start, 60_000) / 3_600_000);
+}
+
+/** Output tokens in `buckets` equal slices of `[start, end]`, oldest first. */
+export function outputOverTime(records: UsageRecord[], start: number, end: number, buckets: number): number[] {
+  const out = new Array<number>(Math.max(1, buckets)).fill(0);
+  const span = end - start;
+  for (const r of records) {
+    if (r.ts < start || r.ts > end) continue;
+    const idx = span <= 0 ? 0 : Math.min(out.length - 1, Math.floor(((r.ts - start) / span) * out.length));
+    out[idx]! += r.output;
+  }
+  return out;
 }

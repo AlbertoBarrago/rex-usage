@@ -17,7 +17,7 @@ Options:
       --codex-home <dir> Codex home (env REX_USAGE_CODEX_HOME, then CODEX_HOME, default ${DEFAULT_CODEX_HOME})
   -h, --help             show this help
 
-Keys: tab view · d range · s source · r refresh · q quit`;
+Keys: j/k move · enter open · esc back · tab view · d range · s source · r refresh · q quit`;
 
 function parseDays(v: string): number | null {
   if (v === "all") return null;
