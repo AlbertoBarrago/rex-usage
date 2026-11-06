@@ -51,4 +51,4 @@ Costs are estimates at API list prices (Claude and ChatGPT/Codex subscriptions a
 
 ## VCS
 
-Jujutsu, colocated with git (`jj git init --colocate`). Bookmark `main`; no push unless asked.
+Plain `git` (no jj): one branch per task off `main`; no push unless asked.
